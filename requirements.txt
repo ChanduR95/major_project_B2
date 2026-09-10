@@ -1,0 +1,16 @@
+Flask
+torch
+torchvision
+timm==1.0.29
+Pillow
+numpy
+python-dotenv
+
+langchain
+langchain-core
+langchain-community
+langchain-google-genai
+langchain-huggingface
+
+sentence-transformers
+faiss-cpu
