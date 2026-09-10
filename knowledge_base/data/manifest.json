@@ -1,0 +1,111 @@
+{
+  "name": "Kidney educational RAG knowledge base",
+  "version": "1.0",
+  "prepared_on": "2026-09-09",
+  "language": "en",
+  "classification_labels": [
+    "stone",
+    "cyst",
+    "tumor",
+    "normal"
+  ],
+  "label_aliases": {
+    "tumour": "tumor"
+  },
+  "label_note": "Shared is not an image class. No stone is not automatically equivalent to normal when other abnormalities exist.",
+  "clinical_review_status": "not_clinician_reviewed",
+  "patient_care_approved": false,
+  "model_trained": false,
+  "embedding_index_created": false,
+  "model_evaluation_performed": false,
+  "counts": {
+    "records": 138,
+    "by_condition": {
+      "stone": 46,
+      "cyst": 29,
+      "tumor": 31,
+      "normal": 20,
+      "shared": 12
+    },
+    "by_topic": {
+      "advice": 19,
+      "appointment_checklist": 4,
+      "diagnosis": 13,
+      "diet": 13,
+      "follow_up": 10,
+      "guidelines": 10,
+      "medication_safety": 9,
+      "model_limits": 4,
+      "overview": 15,
+      "red_flags": 9,
+      "risk_factors": 6,
+      "special_populations": 3,
+      "symptoms": 12,
+      "treatment_overview": 11
+    },
+    "body_words": 6869,
+    "body_word_count_method": "Whitespace tokens in unique record text only; excludes titles, cautions, questions, citations and audit excerpts.",
+    "index_eligible": 134,
+    "project_policy_records": 4,
+    "external_sources": 37,
+    "example_questions": 276,
+    "evaluation_cases": 44,
+    "selected_raw_blocks": 316
+  },
+  "inputs": [
+    {
+      "source_id": "RAW_ORIGINAL",
+      "filename": "kidney dataset raw raw raw.docx",
+      "sha256": "3f8619b1dd466962b3757752b36d0d49b745d3a039cbc9a7ad3a80c41aae3659",
+      "body_paragraph_count_including_empty": 3375,
+      "body_table_count": 11,
+      "nonempty_blocks": 3329,
+      "extracted_word_count": 68823,
+      "external_relationships": 2034,
+      "unique_external_targets": 799,
+      "extraction_scope": "Main document body paragraphs and tables; not images, comments, headers, footers or text boxes.",
+      "hyperlink_warning": "An embedded link is a reference, not proof of the source or accuracy of surrounding text."
+    },
+    {
+      "source_id": "RAW_SUPPLEMENT",
+      "filename": "kidney dataset raw raw raw(1).docx",
+      "sha256": "6842847520a74a3f761286cee687ce1e2fa3bc864052205743f6aa62bc1262a4",
+      "body_paragraph_count_including_empty": 3540,
+      "body_table_count": 17,
+      "nonempty_blocks": 3494,
+      "extracted_word_count": 70697,
+      "external_relationships": 2034,
+      "unique_external_targets": 799,
+      "extraction_scope": "Main document body paragraphs and tables; not images, comments, headers, footers or text boxes.",
+      "hyperlink_warning": "An embedded link is a reference, not proof of the source or accuracy of surrounding text."
+    }
+  ],
+  "index_file": "data/knowledge_base.jsonl",
+  "index_filter": {
+    "index_eligible": true
+  },
+  "duplicate_views": [
+    "data/by_condition/stone.jsonl",
+    "data/by_condition/cyst.jsonl",
+    "data/by_condition/tumor.jsonl",
+    "data/by_condition/normal.jsonl",
+    "data/by_condition/shared.jsonl"
+  ],
+  "do_not_index": [
+    "audit/",
+    "evaluation/",
+    "authoring/",
+    "scripts/",
+    "data/sources.json",
+    "data/manifest.json",
+    "data/schema.json"
+  ],
+  "source_register": "data/sources.json",
+  "guideline_scope": "Named Canadian guideline editions; not a complete local clinical protocol or assurance of latest guidance.",
+  "training_note": "Knowledge reference records and synthetic evaluation scenarios; not a supervised fine-tuning dataset.",
+  "input_repeated_paragraph_groups": {
+    "RAW_ORIGINAL": 35,
+    "RAW_SUPPLEMENT": 35
+  },
+  "main_jsonl_sha256": "1659cc96d79c6368628971a2eaf02f58c536b3b102d04540a47e45732d03459e"
+}

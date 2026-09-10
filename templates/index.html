@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>KidneyVision AI</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="nav-container">
+
+        <div class="brand">
+            <div class="brand-icon">K</div>
+
+            <div>
+                <h2>KidneyVision</h2>
+                <span>SwinLLM Clinical AI</span>
+            </div>
+        </div>
+
+
+    </div>
+
+</header>
+
+
+<main class="page-container">
+
+    <!-- HERO -->
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <span class="eyebrow">
+                AI-ASSISTED KIDNEY CT ANALYSIS
+            </span>
+
+            <h1>
+                Kidney CT Classification
+                <span>with Clinical Advisory</span>
+            </h1>
+
+
+        </div>
+
+    </section>
+
+
+    <!-- MAIN GRID -->
+    <section class="main-grid">
+
+        <!-- CT UPLOAD -->
+        <div class="card upload-card">
+
+            <div class="card-heading">
+
+                <div>
+                    <p class="section-label">
+                        CT ANALYSIS
+                    </p>
+
+                    <h2>
+                        Upload Kidney CT Scan
+                    </h2>
+                </div>
+
+
+            </div>
+
+
+            <form id="analysisForm">
+
+                <!-- DROP AREA -->
+                <div
+                    class="drop-zone"
+                    id="dropZone"
+                >
+
+                    <input
+                        type="file"
+                        id="image"
+                        name="image"
+                        accept=".jpg,.jpeg,.png"
+                        hidden
+                    >
+
+                    <div
+                        class="drop-placeholder"
+                        id="dropPlaceholder"
+                    >
+
+                        <div class="upload-icon">
+                            ↑
+                        </div>
+
+                        <h3>
+                            Drop CT image here
+                        </h3>
+
+                        <p>
+                            or click to browse from your computer
+                        </p>
+
+                        <span>
+                            JPG, JPEG, PNG • Maximum 10 MB
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="preview-container"
+                        id="previewContainer"
+                    >
+
+                        <img
+                            id="preview"
+                            alt="Kidney CT Preview"
+                        >
+
+                        <div class="preview-info">
+
+                            <strong id="fileName">
+                                Selected Image
+                            </strong>
+
+                            <span id="fileSize"></span>
+
+                            <button
+                                type="button"
+                                class="remove-btn"
+                                id="removeImage"
+                            >
+                                Remove image
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="field-group">
+
+                    <label for="question">
+                        Ask the Clinical Assistant
+                    </label>
+
+                    <textarea
+                        id="question"
+                        name="question"
+                        placeholder="Example: What does this result mean and what precautions should I follow?"
+                    ></textarea>
+
+                    <span class="field-help">
+                        Optional — a default clinical explanation
+                        will be generated if left empty.
+                    </span>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="analyze-btn"
+                    id="analyzeButton"
+                >
+
+                    <span>
+                        Analyze CT Image
+                    </span>
+
+                    <span class="button-arrow">
+                        →
+                    </span>
+
+                </button>
+
+            </form>
+
+
+            <div
+                class="error-message"
+                id="error"
+            ></div>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- LOADING -->
+    <section
+        class="loading-card"
+        id="loading"
+    >
+
+        <div class="loader"></div>
+
+        <div>
+
+            <h3>
+                Analyzing kidney CT image
+            </h3>
+
+            <p id="loadingText">
+                Running Swin Transformer classification...
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- RESULTS -->
+    <section
+        class="results-section"
+        id="result"
+    >
+
+        <div class="results-heading">
+
+            <div>
+
+                <p class="section-label">
+                    ANALYSIS COMPLETE
+                </p>
+
+                <h2>
+                    AI Analysis Result
+                </h2>
+
+            </div>
+
+            <span class="complete-badge">
+                Completed
+            </span>
+
+        </div>
+
+
+        <!-- TOP RESULT -->
+        <div class="result-grid">
+
+            <div class="prediction-card">
+
+                <span class="result-label">
+                    Predicted Classification
+                </span>
+
+                <div
+                    class="prediction-value"
+                    id="prediction"
+                >
+                    -
+                </div>
+
+                <p>
+                    Swin Transformer model output
+                </p>
+
+            </div>
+
+
+            <div class="confidence-card">
+
+                <span class="result-label">
+                    Model Confidence
+                </span>
+
+                <div
+                    class="confidence-value"
+                    id="confidence"
+                >
+                    -
+                </div>
+
+                <div class="confidence-track">
+
+                    <div
+                        class="confidence-fill"
+                        id="confidenceFill"
+                    ></div>
+
+                </div>
+
+                <p>
+                    Confidence is not equivalent to
+                    diagnostic certainty.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- PROBABILITIES -->
+        <div class="card probability-card">
+
+            <div class="card-heading">
+
+                <div>
+                    <p class="section-label">
+                        MODEL DISTRIBUTION
+                    </p>
+
+                    <h2>
+                        Class Probabilities
+                    </h2>
+                </div>
+
+            </div>
+
+            <div
+                class="probability-list"
+                id="probabilities"
+            ></div>
+
+        </div>
+
+
+        <!-- ADVISORY -->
+        <div class="card advisory-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <p class="section-label">
+                        RAG + GEMINI
+                    </p>
+
+                    <h2>
+                        Clinical Advisory
+                    </h2>
+
+                </div>
+
+                <div class="ai-badge">
+                    AI
+                </div>
+
+            </div>
+
+
+            <div
+                class="advisory-content"
+                id="advisory"
+            ></div>
+
+        </div>
+
+
+        <!-- DISCLAIMER -->
+        <div
+            class="disclaimer"
+            id="disclaimer"
+        ></div>
+
+
+        <button
+            class="new-analysis-btn"
+            id="newAnalysis"
+        >
+            Analyze Another CT Image
+        </button>
+
+    </section>
+
+</main>
+
+
+<footer>
+
+    <p>
+        KidneyVision SwinLLM • Educational AI Research Project
+    </p>
+
+</footer>
+
+
+<script
+    src="{{ url_for('static', filename='js/app.js') }}"
+></script>
+
+</body>
+</html>

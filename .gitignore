@@ -1,0 +1,24 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Python environments and generated caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Runtime uploads and generated search indexes
+uploads/
+vector_store/
+
+# Model weights are stored separately from source code
+models/*.pth
+
+# Local editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
