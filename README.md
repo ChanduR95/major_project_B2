@@ -17,6 +17,19 @@ The retrieved knowledge is then provided to a **Gemini LLM through LangChain** t
 
 A Flask-based web interface allows users to upload kidney CT images, view prediction probabilities, and receive RAG-grounded information.
 
+After an analysis, the **Clinical Advisory** box supports a conversation with the
+Gemini assistant. Type a follow-up question and select **Send message** or press
+Enter (Shift + Enter adds a new line). Replies use the scan result, relevant
+knowledge, and the most recent 10 exchanges. Failed messages remain in the input
+so they can be sent again. Starting another analysis or reloading the page clears
+the conversation.
+
+The `/chat` endpoint uses a signed analysis context returned by `/analyze`;
+follow-up messages do not upload or classify the image again. Context expires
+after 24 hours. For multiple server workers or sessions that survive a server
+restart, configure the same private `SECRET_KEY` for every worker. Without it,
+the app generates a temporary signing key at startup.
+
 ---
 
 ## Project Architecture
@@ -289,7 +302,7 @@ Start Flask:
 python app.py
 
 Open the following address in your browser:
-http://127.0.0.1:5000
+http://127.0.0.1:8765
 
 Future Improvements
 Possible future extensions include:
@@ -302,7 +315,7 @@ Possible future extensions include:
 ->Grad-CAM visualization
 ->User authentication
 ->Doctor dashboard
-->Conversation history
+->Persistent conversation history across sessions
 ->Improved source citation display
 ->Cloud deployment
 ->REST API deployment

@@ -359,9 +359,33 @@
 
 
             <div
-                class="advisory-content"
+                class="chat-messages"
                 id="advisory"
+                role="log"
+                aria-label="Clinical advisory conversation"
+                aria-live="polite"
+                tabindex="0"
             ></div>
+
+            <form id="chatForm" class="chat-form">
+                <label for="chatMessage">Message the Clinical Assistant</label>
+                <textarea
+                    id="chatMessage"
+                    name="message"
+                    rows="2"
+                    maxlength="2000"
+                    placeholder="Ask a follow-up question about your result..."
+                    aria-describedby="chatHelp"
+                    required
+                    disabled
+                ></textarea>
+                <div class="chat-actions">
+                    <span id="chatHelp" class="field-help">Enter to send · Shift + Enter for a new line.</span>
+                    <button type="submit" id="sendMessage" class="chat-send-btn" disabled>Send message</button>
+                </div>
+                <p id="chatStatus" class="chat-status" role="status"></p>
+                <p id="chatError" class="error-message" role="alert"></p>
+            </form>
 
         </div>
 

@@ -1,10 +1,14 @@
 from pathlib import Path
+import os
+import secrets
 from uuid import uuid4
 
 from flask import Flask, jsonify, request, render_template
 from werkzeug.utils import secure_filename
+from itsdangerous import BadSignature, URLSafeTimedSerializer
 
 from src.pipeline import analyze_kidney_ct
+from src.chatbot import get_chatbot_response
 
 
 # ============================================================
@@ -12,6 +16,10 @@ from src.pipeline import analyze_kidney_ct
 # ============================================================
 
 app = Flask(__name__)
+chat_context = URLSafeTimedSerializer(
+    os.getenv("SECRET_KEY") or secrets.token_hex(32),
+    salt="clinical-advisory"
+)
 
 
 # ============================================================
@@ -220,6 +228,11 @@ def analyze():
                     "answer"
                 ],
 
+            "chat_context": chat_context.dumps({
+                "predicted_class": prediction["predicted_class"],
+                "confidence": float(prediction["confidence"])
+            }),
+
             "disclaimer":
                 (
                     "This system is an educational "
@@ -262,13 +275,68 @@ def analyze():
 
 
 # ============================================================
+# FOLLOW-UP CHAT
+# ============================================================
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(error="Send a JSON message."), 400
+
+    message = data.get("message")
+    if not isinstance(message, str) or not message.strip():
+        return jsonify(error="Please enter a message."), 400
+    message = message.strip()
+    if len(message) > 2000:
+        return jsonify(error="Please keep your message under 2,000 characters."), 400
+
+    token = data.get("chat_context")
+    if not isinstance(token, str) or not token:
+        return jsonify(error="Analyze a CT image before starting a conversation."), 400
+    try:
+        prediction = chat_context.loads(token, max_age=24 * 60 * 60)
+    except BadSignature:
+        return jsonify(error="This analysis session has expired. Please analyze the image again."), 400
+
+    history = data.get("history", [])
+    if not isinstance(history, list) or len(history) > 20:
+        return jsonify(error="Send at most 20 previous messages."), 400
+    for index, turn in enumerate(history):
+        expected_role = "user" if index % 2 == 0 else "assistant"
+        if (
+            not isinstance(turn, dict)
+            or turn.get("role") != expected_role
+            or not isinstance(turn.get("content"), str)
+            or not turn["content"].strip()
+            or len(turn["content"]) > 12000
+        ):
+            return jsonify(error="Invalid conversation history."), 400
+    if len(history) % 2:
+        return jsonify(error="Conversation history must contain completed replies."), 400
+
+    try:
+        result = get_chatbot_response(
+            question=message,
+            predicted_class=prediction["predicted_class"],
+            confidence=prediction["confidence"],
+            history=history
+        )
+        answer = result.get("answer")
+        if not isinstance(answer, str) or not answer.strip():
+            return jsonify(error="The assistant returned an empty reply. Please try again."), 502
+        return jsonify(success=True, answer=answer)
+    except Exception:
+        return jsonify(error="The assistant could not reply right now. Please try sending your message again."), 502
+
+
+# ============================================================
 # START FLASK SERVER
 # ============================================================
 
 if __name__ == "__main__":
-
     app.run(
         host="127.0.0.1",
-        port=5000,
-        debug=True
+        port=8765,
+        debug=False
     )

@@ -45,6 +45,121 @@ const newAnalysisButton =
 
 
 let selectedFile = null;
+const chatForm = document.getElementById("chatForm");
+const chatMessage = document.getElementById("chatMessage");
+const sendMessageButton = document.getElementById("sendMessage");
+const chatStatus = document.getElementById("chatStatus");
+const chatError = document.getElementById("chatError");
+const chatMessages = document.getElementById("advisory");
+let conversation = [];
+let analysisContext = null;
+let chatRequest = null;
+
+function setChatBusy(busy) {
+    chatMessage.disabled = busy || !analysisContext;
+    sendMessageButton.disabled = busy || !analysisContext || !chatMessage.value.trim();
+    sendMessageButton.textContent = busy ? "Replying..." : "Send message";
+    chatStatus.textContent = busy ? "Clinical Assistant is replying..." : "";
+}
+
+function resetChat() {
+    if (chatRequest) chatRequest.abort();
+    chatRequest = null;
+    analysisContext = null;
+    conversation = [];
+    chatMessages.replaceChildren();
+    chatMessage.value = "";
+    chatError.textContent = "";
+    setChatBusy(false);
+}
+
+function appendMessage(role, text) {
+    const bubble = document.createElement("div");
+    bubble.className = `chat-message chat-message-${role}`;
+    const label = document.createElement("span");
+    label.className = "chat-message-label";
+    label.textContent = role === "user" ? "You" : "Clinical Assistant · AI";
+    const content = document.createElement("div");
+    content.className = "advisory-content";
+    if (role === "assistant") {
+        displayAdvisory(text, content);
+    } else {
+        content.textContent = text;
+    }
+    bubble.append(label, content);
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return bubble;
+}
+
+chatMessage.addEventListener("input", () => setChatBusy(Boolean(chatRequest)));
+chatMessage.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        if (!sendMessageButton.disabled) chatForm.requestSubmit();
+    }
+});
+
+chatForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const message = chatMessage.value.trim();
+    if (!message || !analysisContext || chatRequest) return;
+    if (message.length > 2000) {
+        chatError.textContent = "Please keep your message under 2,000 characters.";
+        return;
+    }
+
+    const controller = new AbortController();
+    chatRequest = controller;
+    const timeout = setTimeout(() => controller.abort(), 120000);
+    const bubble = appendMessage("user", message);
+    chatMessage.value = "";
+    chatError.textContent = "";
+    setChatBusy(true);
+
+    try {
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify({
+                message,
+                chat_context: analysisContext,
+                history: conversation.slice(-20).map((turn) => ({
+                    role: turn.role,
+                    content: turn.content.slice(0, 12000)
+                }))
+            })
+        });
+        const data = await response.json();
+        if (chatRequest !== controller) return;
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "The assistant could not reply. Please try again.");
+        }
+        if (typeof data.answer !== "string" || !data.answer.trim()) {
+            throw new Error("The assistant returned an empty reply. Please try again.");
+        }
+        conversation.push({ role: "user", content: message });
+        conversation.push({ role: "assistant", content: data.answer });
+        appendMessage("assistant", data.answer);
+    } catch (error) {
+        if (chatRequest !== controller) return;
+        bubble.remove();
+        chatMessage.value = message;
+        chatError.textContent = error.name === "AbortError"
+            ? "The reply took too long. Please send your message again."
+            : error instanceof SyntaxError || error instanceof TypeError
+                ? "Could not connect to the assistant. Please try again."
+                : error.message;
+    } finally {
+        clearTimeout(timeout);
+        if (chatRequest === controller) {
+            chatRequest = null;
+            setChatBusy(false);
+            chatMessage.focus({ preventScroll: true });
+        }
+    }
+});
 
 
 /* =========================================================
@@ -256,6 +371,7 @@ form.addEventListener(
 
 
         errorBox.textContent = "";
+        resetChat();
 
         resultSection.style.display =
             "none";
@@ -438,9 +554,14 @@ function displayResults(data) {
     );
 
 
-    displayAdvisory(
-        data.advisory
-    );
+    resetChat();
+    analysisContext = data.chat_context;
+    conversation = [
+        { role: "user", content: data.question },
+        { role: "assistant", content: data.advisory }
+    ];
+    conversation.forEach((turn) => appendMessage(turn.role, turn.content));
+    setChatBusy(false);
 
 
     document.getElementById(
@@ -614,12 +735,7 @@ function displayProbabilities(
    SAFELY DISPLAY GEMINI RESPONSE
 ========================================================= */
 
-function displayAdvisory(text) {
-
-    const container =
-        document.getElementById(
-            "advisory"
-        );
+function displayAdvisory(text, container) {
 
 
     container.innerHTML = "";
@@ -797,6 +913,8 @@ newAnalysisButton.addEventListener(
     function() {
 
         resetImage();
+
+        resetChat();
 
 
         document.getElementById(
